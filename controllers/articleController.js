@@ -1,3 +1,4 @@
+const fs = require('fs');
 const Article = require('../models/Article');
 const { validateArticle } = require('../helpers/validate');
 
@@ -145,10 +146,45 @@ const delArticle = async(req, res) => {
     }
 }
 
+const uploadImg = (req, res) => {
+    if(!req.file && !req.files) {
+        return res.status(404).json({
+            status: 'Error',
+            message: 'Petición inválida'
+        });
+    }
+
+    const validExtensions = ['jpg', 'png', 'jpeg', 'gif'];
+
+    let fileName = req.file.originalname;
+
+    let fileSplit = fileName.split('\.');
+    let fileExtension = fileSplit[1];
+
+    let validFormat = validExtensions.includes(fileExtension);
+
+    if(!validFormat) {
+        fs.unlink(req.file.path, (error) => {
+            return res.status(400).json({
+                status: 'Error',
+                message: 'Archivo inválido'
+            });
+        });
+    } else {
+        return res.status(200).send({
+            status: 'Success',
+            message: 'La ruta funciona correctamente',
+            file: req.file,
+            validFormat
+        });
+    }
+}
+
 module.exports = {
     saveCourse,
     getArticles,
     findOneArticleById,
     delArticle,
-    editArticle
+    editArticle,
+    uploadImg
 }
