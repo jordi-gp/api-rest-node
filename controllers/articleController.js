@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const Article = require('../models/Article');
 const { validateArticle } = require('../helpers/validate');
 
@@ -146,7 +147,7 @@ const delArticle = async(req, res) => {
     }
 }
 
-const uploadImg = (req, res) => {
+const uploadImg = async(req, res) => {
     if(!req.file && !req.files) {
         return res.status(404).json({
             status: 'Error',
@@ -171,13 +172,60 @@ const uploadImg = (req, res) => {
             });
         });
     } else {
+        let articleId = req.params.id;
+        let editedArticle = await Article.findOneAndUpdate({_id: articleId}, {image: req.file.filename}, {new: true}).exec();
+
+        if(!editedArticle) {
+            return res.status(404).json({
+                status: 'Error',
+                message: 'Articulo no encontrado'
+            });
+        }
+
         return res.status(200).send({
             status: 'Success',
-            message: 'La ruta funciona correctamente',
-            file: req.file,
-            validFormat
+            editedArticle,
+            file: req.file
         });
     }
+}
+
+const image = (req, res) => {
+    let file = req.params.file;
+    let localPath = './images/articles/' + file;
+
+    fs.stat(localPath, (error, exists) => {
+        if(exists) {
+            return res.sendFile(path.resolve(localPath));
+        } else {
+            return res.status(404).json({
+                status: 'Error',
+                message: 'Imagen no encontrada'
+            });
+        }
+    })
+}
+
+const search = async(req, res) => {
+    let search = req.params.name;
+
+    const articlesFound = await Article.find({'$or': [
+        {'title': {$regex: search, $options: 'i'}},
+        {'content': {$regex: search, $options: 'i'}}
+    ]});
+
+    if(!articlesFound || articlesFound.length <= 0) {
+        return res.status(404).json({
+            status: 'Error',
+            message: 'No se ha encontrado ningún articulo'
+        });
+    }
+
+    return res.status(200).send({
+        status: 'Success',
+        message: 'La ruta funciona correctamente',
+        article: articlesFound
+    });
 }
 
 module.exports = {
@@ -186,5 +234,7 @@ module.exports = {
     findOneArticleById,
     delArticle,
     editArticle,
-    uploadImg
+    uploadImg,
+    image,
+    search
 }

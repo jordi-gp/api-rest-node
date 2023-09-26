@@ -17,10 +17,15 @@ const storage = multer.diskStorage({
 const uploads = multer({storage: storage})
 
 router.get('/articulos', ArticleController.getArticles);
-router.post('/save-course', ArticleController.saveCourse);
+router.get('/search/:name', ArticleController.search);
 router.get('/articulo/:id', ArticleController.findOneArticleById);
-router.delete('/articulo/:id', ArticleController.delArticle);
-router.put('/articulo/:id', ArticleController.editArticle);
+router.get('/image/:file', ArticleController.image);
+
+router.post('/save-course', ArticleController.saveCourse);
 router.post('/upload-image/:id', [uploads.single('file0')],ArticleController.uploadImg);
+
+router.put('/articulo/:id', ArticleController.editArticle);
+
+router.delete('/articulo/:id', ArticleController.delArticle);
 
 module.exports = router;
