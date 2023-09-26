@@ -1,5 +1,5 @@
-const validator = require('validator');
 const Article = require('../models/Article');
+const { validateArticle } = require('../helpers/validate');
 
 const getArticles = async(req, res) => {
     try {
@@ -55,19 +55,14 @@ const findOneArticleById = async(req, res) => {
 
 const saveCourse = (req, res) => {
     let params = req.body;
-
     try {
-        let validatedTitle = !validator.isEmpty(params.title);
-        let validatedContend = !validator.isEmpty(params.content);
-
-        if(!validatedTitle || !validatedContend) {
-            throw new Error('No se puede dejar ningún campo vacío');
-        }
+        validateArticle(params);
 
     } catch(error) {
         return res.status(400).json({
             status: 'Error',
-            message: 'Revisa la información de los campos'
+            message: 'Revisa la información de los campos',
+            error: error.message
         });
     }
 
